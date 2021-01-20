@@ -1,9 +1,16 @@
+
+
 def __init__(self):
         # You have to let the pygame library initialise itself
         pygame.init()
 
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
+
+        self.score = 0
+
+        self.myFont = pygame.font.SysFont('monospace', 100)
+        self.label  = self.myFont.render(str(self.score), 1, (255, 255, 255))
 
         # Set up the window that the game will run in
         self.SCREEN_WIDTH = 600
@@ -27,3 +34,4 @@ def __init__(self):
 
         # Create a list for any bullets that we create later, but don't actually a bullet yet.
         self.bullet_list = []
+

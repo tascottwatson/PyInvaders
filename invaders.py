@@ -12,6 +12,8 @@ class Game:
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
 
+        
+
         # Set up the window that the game will run in
         self.SCREEN_WIDTH = 600
         self.SCREEN_HEIGHT = 600
@@ -46,6 +48,8 @@ class Game:
         # where to draw itself
         self.player.draw(self.screen)
 
+
+
         # Run through the entire list of aliens drawing each of them
         for alien in self.alien_list:
             alien.draw(self.screen)
@@ -74,6 +78,7 @@ class Game:
                 if bullet.get_rectangle().colliderect(alien.get_rectangle()):
                     self.bullet_list.remove(bullet)
                     self.alien_list.remove(alien)
+                    
 
     def main_loop(self):
         """

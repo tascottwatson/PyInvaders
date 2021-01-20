@@ -17,3 +17,5 @@ def update_logic(self, event_list):
                 if bullet.get_rectangle().colliderect(alien.get_rectangle()):
                     self.bullet_list.remove(bullet)
                     self.alien_list.remove(alien)
+                    self.score += 1 
+                    self.label  = self.myFont.render(str(self.score), 1, (255, 255, 255))

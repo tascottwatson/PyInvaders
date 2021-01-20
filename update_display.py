@@ -9,6 +9,8 @@ def update_display(self):
         # where to draw itself
         self.player.draw(self.screen)
 
+        self.screen.blit(self.label, (280, 50))
+
         # Run through the entire list of aliens drawing each of them
         for alien in self.alien_list:
             alien.draw(self.screen)
