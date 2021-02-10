@@ -82,8 +82,8 @@ class Game:
 
         for powerup in self.powerup_list:
             powerup.draw(self.screen)
-        
-        
+
+
 
     def update_logic(self, event_list):
         """
@@ -181,22 +181,12 @@ class Game:
                 self.bg = pygame.transform.scale(self.bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
                 self.screen.blit(self.bg, (0, 0))
                 for event in pygame.event.get():
-                    if event.key == pygame.K_r:
-                        self.hit = False
-                        self.bg.fill(transparent)
-                        self.main_loop()
-                
-                
-        
-        while True:
-            event = pygame.event.wait()
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_r:
+                            self.hit = False
+                            self.bg.fill(transparent)
+                            self.main_loop()
+
         # If we exit the main loop, the only thing left to do is shut down pygame.
         # pygame.quit()
 
