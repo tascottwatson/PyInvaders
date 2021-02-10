@@ -187,9 +187,9 @@ class Game:
                 self.bg = pygame.image.load("gameover.png").convert()
                 self.bg = pygame.transform.scale(self.bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
                 self.screen.blit(self.bg, (0, 0))
-                self.myFont = pygame.font.SysFont('monospace', 100)
-                self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
-                self.screen.blit(self.label, (x_coord, 50))
+                highscore = self.score
+                self.scorelabel = self.myFont.render(str(highscore), 1, (255, 255, 255))
+                self.screen.blit(self.scorelabel, (250, 50))
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_r:
