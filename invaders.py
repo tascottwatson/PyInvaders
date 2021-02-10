@@ -44,13 +44,12 @@ class Game:
 
         # Create a list to contain any aliens we create and add one new Alien object to the list.
         self.alien_list = []
-
         # Create a list for any bullets that we create later, but don't actually a bullet yet.
         self.bullet_list = []
-
         self.powerup_list = []
 
         self.max_powerup_number = 1
+        # power_sound = pygame.mixer.Sound("crash.wav")
 
     def update_display(self):
         """
@@ -99,6 +98,10 @@ class Game:
             bullet.update(event_list)
         for powerup in self.powerup_list:
             powerup.update(event_list)
+
+        for bullet in self.bullet_list:
+            if bullet.y < 0:
+                self.bullet_list.remove(bullet)
 
 
         # Check collisions. Check every bullet against every alien to so if they are overlapping.
@@ -154,6 +157,8 @@ class Game:
         self.alien_list = []
         self.bullet_list = []
         self.powerup_list = []
+        self.bullet_spawn_interval = 0.5
+        self.player.increment = 5
         self.myFont = pygame.font.SysFont('monospace', 100)
         self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
         while self.running:
@@ -182,12 +187,19 @@ class Game:
                 self.bg = pygame.image.load("gameover.png").convert()
                 self.bg = pygame.transform.scale(self.bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
                 self.screen.blit(self.bg, (0, 0))
+                self.myFont = pygame.font.SysFont('monospace', 100)
+                self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
+                self.screen.blit(self.label, (x_coord, 50))
                 for event in pygame.event.get():
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_r:
                             self.hit = False
                             self.bg.fill(transparent)
                             self.main_loop()
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
 
         # If we exit the main loop, the only thing left to do is shut down pygame.
         # pygame.quit()
