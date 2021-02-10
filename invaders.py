@@ -105,8 +105,10 @@ class Game:
         for bullet in self.bullet_list:
             for alien in self.alien_list:
                 if bullet.get_rectangle().colliderect(alien.get_rectangle()):
-                    self.bullet_list.remove(bullet)
-                    self.alien_list.remove(alien)
+                    if bullet in self.bullet_list:
+                        self.bullet_list.remove(bullet)
+                    if alien in self.alien_list:
+                        self.alien_list.remove(alien)
                     self.score += 1
                     self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
 
