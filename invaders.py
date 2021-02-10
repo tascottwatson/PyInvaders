@@ -11,6 +11,7 @@ class Game:
         # You have to let the pygame library initialise itself
         pygame.init()
         self.running = True
+        self.hit = False
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
         self.alien_spawn_timer = time.time()
@@ -81,8 +82,8 @@ class Game:
 
         for powerup in self.powerup_list:
             powerup.draw(self.screen)
-
-        pygame.display.flip()
+        
+        
 
     def update_logic(self, event_list):
         """
@@ -119,7 +120,7 @@ class Game:
 
         for alien in self.alien_list:
             if self.player.get_rectangle().colliderect(alien.get_rectangle()):
-                self.running = False
+                self.hit = True
 
         if time.time() - self.alien_spawn_timer > self.alien_spawn_interval:
             x_coord = random.randint(100, self.SCREEN_WIDTH-100)
@@ -139,6 +140,7 @@ class Game:
                 self.powerup_list.append(PowerUp(x_coord, y_coord, type))
             self.powerup_spawn_timer += self.powerup_spawn_interval
 
+        pygame.display.flip()
 
     def main_loop(self):
         """
@@ -174,10 +176,15 @@ class Game:
                 elif event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-
-        bg = pygame.image.load("gameover.png").convert()
-        bg = pygame.transform.scale(bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
-        self.screen.blit(bg, (0, 0))
+            if self.hit == True:
+                transparent = (0, 0, 0, 0)
+                self.background.fill(transparent)
+                bg = pygame.image.load("gameover.png").convert()
+                bg = pygame.transform.scale(bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
+                self.screen.blit(bg, (0, 0))
+                
+                
+        
         while True:
             event = pygame.event.wait()
             if event.type == pygame.QUIT:
