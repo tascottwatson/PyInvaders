@@ -2,6 +2,7 @@ import pygame
 import time
 import random
 
+
 class Game:
     """
     Responsible for handling the main loop and storing various key variables
@@ -9,7 +10,7 @@ class Game:
     def __init__(self):
         # You have to let the pygame library initialise itself
         pygame.init()
-
+        self.running = True
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
         self.alien_spawn_timer = time.time()
@@ -54,6 +55,7 @@ class Game:
         """
         This function gets called every frame do draw everything to the screen.
         """
+
         # Start by re-drawing the background. This will wipe out anything that was previously drawn
         self.screen.blit(self.background, (0, 0))
 
@@ -110,10 +112,14 @@ class Game:
         for powerup in self.powerup_list:
             if self.player.get_rectangle().colliderect(powerup.get_rectangle()):
                 if powerup.type == "speedup":
-                    self.player.increment += 1
+                    self.player.increment += 2
                 else:
-                    self.bullet_spawn_interval -= 0.1
+                    self.bullet_spawn_interval -= 0.15
                 self.powerup_list.remove(powerup)
+
+        for alien in self.alien_list:
+            if self.player.get_rectangle().colliderect(alien.get_rectangle()):
+                self.running = False
 
         if time.time() - self.alien_spawn_timer > self.alien_spawn_interval:
             x_coord = random.randint(100, self.SCREEN_WIDTH-100)
@@ -125,23 +131,28 @@ class Game:
             self.bullet_list.append(Bullet(self.player.x+25, self.player.y))
             self.bullet_spawn_timer += self.bullet_spawn_interval
 
-        if len(self.powerup_list) < self.max_powerup_number:
-            if time.time() - self.powerup_spawn_timer > self.powerup_spawn_interval:
+        if time.time() - self.powerup_spawn_timer > self.powerup_spawn_interval:
+            if len(self.powerup_list) < self.max_powerup_number:
                 x_coord = random.randint(100, self.SCREEN_WIDTH-100)
                 y_coord = random.randint(100, self.SCREEN_HEIGHT-100)
                 type = random.choice(["speedup", "strength"])
                 self.powerup_list.append(PowerUp(x_coord, y_coord, type))
-                self.powerup_spawn_timer += self.powerup_spawn_interval
-
-
+            self.powerup_spawn_timer += self.powerup_spawn_interval
 
 
     def main_loop(self):
         """
         This is the main loop. Once the game starts it just keeps repeating until the game ends.
         """
-        running = True
-        while running:
+        self.score = 0
+        self.player.x = 250
+        self.player.y = 500
+        self.alien_list = []
+        self.bullet_list = []
+        self.powerup_list = []
+        self.myFont = pygame.font.SysFont('monospace', 100)
+        self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
+        while self.running:
             # Fix the frame rate to 60 fps. If we get here too quickly the tick function
             # halts the program until it's time to move on.
             self.clock.tick(60)
@@ -158,12 +169,29 @@ class Game:
 
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
-                        running = False  # quit the game
+                        pygame.quit()  # quit the game
+                        quit()
                 elif event.type == pygame.QUIT:
-                    running = False
+                    pygame.quit()
+                    quit()
 
+        bg = pygame.image.load("gameover.png").convert()
+        bg = pygame.transform.scale(bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
+        self.screen.blit(bg, (0, 0))
+        while True:
+            event = pygame.event.wait()
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    quit()
+                if event.key == pygame.K_r:
+                    self.running = True
+                    self.main_loop()
         # If we exit the main loop, the only thing left to do is shut down pygame.
-        pygame.quit()
+        # pygame.quit()
 
 
 
@@ -173,7 +201,7 @@ class Player:
     Also draws the image and updates their position based on keyboard input.
     """
     def __init__(self):
-        self.x = 100
+        self.x = 250
         self.y = 500
         self.x_vel = 0
         self.y_vel = 0
@@ -184,27 +212,20 @@ class Player:
         screen.blit(self._image, (self.x, self.y))
 
     def update(self, event_list):
-        for event in event_list:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.x_vel -= self.increment
-                if event.key == pygame.K_RIGHT:
-                    self.x_vel += self.increment
-                if event.key == pygame.K_UP:
-                    self.y_vel -= self.increment
-                if event.key == pygame.K_DOWN:
-                    self.y_vel += self.increment
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    self.x_vel += self.increment
-                if event.key == pygame.K_RIGHT:
-                    self.x_vel -= self.increment
-                if event.key == pygame.K_UP:
-                    self.y_vel += self.increment
-                if event.key == pygame.K_DOWN:
-                    self.y_vel -= self.increment
-        self.x += self.x_vel
-        self.y += self.y_vel
+        keys_pressed = pygame.key.get_pressed()
+
+        if keys_pressed[pygame.K_LEFT]:
+            self.x -= self.increment
+
+        if keys_pressed[pygame.K_RIGHT]:
+            self.x += self.increment
+
+        if keys_pressed[pygame.K_UP]:
+            self.y -= self.increment
+
+        if keys_pressed[pygame.K_DOWN]:
+            self.y += self.increment
+
 
     def get_rectangle(self):
         rect = self._image.get_rect()
