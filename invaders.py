@@ -1,5 +1,6 @@
 import pygame
-
+import time
+import random
 
 class Game:
     """
@@ -11,14 +12,23 @@ class Game:
 
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
-
-        
+        self.alien_spawn_timer = time.time()
+        self.alien_spawn_interval = 0.5
+        self.bullet_spawn_timer = time.time()
+        self.bullet_spawn_interval = 0.5
+        self.powerup_spawn_timer = time.time()
+        self.powerup_spawn_interval = 10
 
         # Set up the window that the game will run in
         self.SCREEN_WIDTH = 600
         self.SCREEN_HEIGHT = 600
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_WIDTH))
         pygame.display.set_caption("Space Invaders!")
+
+        self.score = 0
+
+        self.myFont = pygame.font.SysFont('monospace', 100)
+        self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
 
         # Load the background image, scale it to fill the entire window, and copy it to the screen.
         # (screen is the image that we actually see in the window. blit is a function that draws an image onto
@@ -32,10 +42,13 @@ class Game:
 
         # Create a list to contain any aliens we create and add one new Alien object to the list.
         self.alien_list = []
-        self.alien_list.append(Alien(100, 100, 5))
 
         # Create a list for any bullets that we create later, but don't actually a bullet yet.
         self.bullet_list = []
+
+        self.powerup_list = []
+
+        self.max_powerup_number = 1
 
     def update_display(self):
         """
@@ -48,7 +61,13 @@ class Game:
         # where to draw itself
         self.player.draw(self.screen)
 
-
+        if len(str(self.score)) == 1:
+            x_coord = 280
+        elif len(str(self.score)) == 2:
+            x_coord = 255
+        elif len(str(self.score)) == 3:
+            x_coord = 230
+        self.screen.blit(self.label, (x_coord, 50))
 
         # Run through the entire list of aliens drawing each of them
         for alien in self.alien_list:
@@ -57,6 +76,10 @@ class Game:
         # Do the same for any bullets
         for bullet in self.bullet_list:
             bullet.draw(self.screen)
+
+        for powerup in self.powerup_list:
+            powerup.draw(self.screen)
+
         pygame.display.flip()
 
     def update_logic(self, event_list):
@@ -71,6 +94,9 @@ class Game:
             alien.update(event_list)
         for bullet in self.bullet_list:
             bullet.update(event_list)
+        for powerup in self.powerup_list:
+            powerup.update(event_list)
+
 
         # Check collisions. Check every bullet against every alien to so if they are overlapping.
         for bullet in self.bullet_list:
@@ -78,7 +104,37 @@ class Game:
                 if bullet.get_rectangle().colliderect(alien.get_rectangle()):
                     self.bullet_list.remove(bullet)
                     self.alien_list.remove(alien)
-                    
+                    self.score += 1
+                    self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
+
+        for powerup in self.powerup_list:
+            if self.player.get_rectangle().colliderect(powerup.get_rectangle()):
+                if powerup.type == "speedup":
+                    self.player.increment += 1
+                else:
+                    self.bullet_spawn_interval -= 0.1
+                self.powerup_list.remove(powerup)
+
+        if time.time() - self.alien_spawn_timer > self.alien_spawn_interval:
+            x_coord = random.randint(100, self.SCREEN_WIDTH-100)
+            y_coord = random.randint(-20, 0)
+            self.alien_list.append(Alien(self.SCREEN_WIDTH, x_coord, y_coord, 3))
+            self.alien_spawn_timer += self.alien_spawn_interval
+
+        if time.time() - self.bullet_spawn_timer > self.bullet_spawn_interval:
+            self.bullet_list.append(Bullet(self.player.x+25, self.player.y))
+            self.bullet_spawn_timer += self.bullet_spawn_interval
+
+        if len(self.powerup_list) < self.max_powerup_number:
+            if time.time() - self.powerup_spawn_timer > self.powerup_spawn_interval:
+                x_coord = random.randint(100, self.SCREEN_WIDTH-100)
+                y_coord = random.randint(100, self.SCREEN_HEIGHT-100)
+                type = random.choice(["speedup", "strength"])
+                self.powerup_list.append(PowerUp(x_coord, y_coord, type))
+                self.powerup_spawn_timer += self.powerup_spawn_interval
+
+
+
 
     def main_loop(self):
         """
@@ -98,10 +154,8 @@ class Game:
 
             # After letting the different objects update themselves deal with any other events.
             for event in event_list:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        # If the user pressed the space bar, create a new bullet
-                        self.bullet_list.append(Bullet(self.player.x, 500))
+                # If the user pressed the space bar, create a new bullet
+
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_ESCAPE:
                         running = False  # quit the game
@@ -110,6 +164,7 @@ class Game:
 
         # If we exit the main loop, the only thing left to do is shut down pygame.
         pygame.quit()
+
 
 
 class Player:
@@ -122,6 +177,7 @@ class Player:
         self.y = 500
         self.x_vel = 0
         self.y_vel = 0
+        self.increment = 5
         self._image = pygame.image.load('UFO.png').convert_alpha()
 
     def draw(self, screen):
@@ -131,28 +187,44 @@ class Player:
         for event in event_list:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.x_vel -= 10
+                    self.x_vel -= self.increment
                 if event.key == pygame.K_RIGHT:
-                    self.x_vel += 10
+                    self.x_vel += self.increment
+                if event.key == pygame.K_UP:
+                    self.y_vel -= self.increment
+                if event.key == pygame.K_DOWN:
+                    self.y_vel += self.increment
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    self.x_vel += 10
+                    self.x_vel += self.increment
                 if event.key == pygame.K_RIGHT:
-                    self.x_vel -= 10
+                    self.x_vel -= self.increment
+                if event.key == pygame.K_UP:
+                    self.y_vel += self.increment
+                if event.key == pygame.K_DOWN:
+                    self.y_vel -= self.increment
         self.x += self.x_vel
         self.y += self.y_vel
+
+    def get_rectangle(self):
+        rect = self._image.get_rect()
+        rect.x = self.x
+        rect.y = self.y
+        return rect
+
 
 
 class Alien:
     """
     Very similar to the Player object. The update function causes it to slowly zig zig down the screen.
     """
-    def __init__(self, start_x, start_y, speed):
+    def __init__(self, SCREEN_WIDTH, start_x, start_y, speed):
         self.x = start_x
         self.y = start_y
-        self.speed = speed
+        self.speed = random.choice([-speed/2, speed/2])
+        self.y_speed = speed/3
         self.left_limit = 50
-        self.right_limit = 500
+        self.right_limit = SCREEN_WIDTH - 50
         self._image = pygame.image.load('Alien.png').convert_alpha()
 
     def draw(self, screen):
@@ -162,7 +234,7 @@ class Alien:
         self.x += self.speed
         if self.x < self.left_limit or self.x > self.right_limit:
             self.speed *= -1
-            self.y += 10
+        self.y += self.y_speed
 
     def get_rectangle(self):
         rect = self._image.get_rect()
@@ -178,7 +250,7 @@ class Bullet:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.velocity = 10
+        self.velocity = 12
         self._image = pygame.image.load('Bullet.png').convert_alpha()
 
     def draw(self, screen):
@@ -193,7 +265,34 @@ class Bullet:
         rect.y = self.y
         return rect
 
+class PowerUp:
+    def __init__(self, x, y, type):
+        self.x = x
+        self.y = y
+        self.type = type
+        self._image = pygame.image.load(type + '.png').convert_alpha()
+        self.bob = "up"
+        self.bob_interval = 0.5
+        self.bob_time = time.time()
 
+    def draw(self, screen):
+        screen.blit(self._image, (self.x, self.y))
+
+    def update(self, event_list):
+        if time.time() - self.bob_time > self.bob_interval:
+            if self.bob == "up":
+                self.y += 10
+                self.bob = "down"
+            else:
+                self.y -= 10
+                self.bob = "up"
+            self.bob_time += self.bob_interval
+
+    def get_rectangle(self):
+        rect = self._image.get_rect()
+        rect.x = self.x
+        rect.y = self.y
+        return rect
 # This is where the game starts. We create a game object and then call it's main_loop() function.
 game = Game()
 game.main_loop()
