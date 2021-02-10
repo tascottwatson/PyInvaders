@@ -1,7 +1,7 @@
 import pygame
 import time
 import random
-
+transparent = (0, 0, 0, 0)
 
 class Game:
     """
@@ -10,6 +10,7 @@ class Game:
     def __init__(self):
         # You have to let the pygame library initialise itself
         pygame.init()
+        self.running = True
         self.hit = False
         # Using clock allows us fix a particular frame rate later on
         self.clock = pygame.time.Clock()
@@ -81,8 +82,8 @@ class Game:
 
         for powerup in self.powerup_list:
             powerup.draw(self.screen)
-
-
+        
+        
 
     def update_logic(self, event_list):
         """
@@ -153,7 +154,7 @@ class Game:
         self.powerup_list = []
         self.myFont = pygame.font.SysFont('monospace', 100)
         self.label = self.myFont.render(str(self.score), 1, (255, 255, 255))
-        while True:
+        while self.running:
             # Fix the frame rate to 60 fps. If we get here too quickly the tick function
             # halts the program until it's time to move on.
             self.clock.tick(60)
@@ -176,16 +177,17 @@ class Game:
                     pygame.quit()
                     quit()
             if self.hit == True:
-                transparent = (0, 0, 0, 0)
-                self.background.fill(transparent)
-                bg = pygame.image.load("gameover.png").convert()
-                bg = pygame.transform.scale(bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
-                self.screen.blit(bg, (0, 0))
-                print('breaking')
-                break
-
-
-
+                self.bg = pygame.image.load("gameover.png").convert()
+                self.bg = pygame.transform.scale(self.bg, (self.SCREEN_WIDTH, self.SCREEN_WIDTH))
+                self.screen.blit(self.bg, (0, 0))
+                for event in pygame.event.get():
+                    if event.key == pygame.K_r:
+                        self.hit = False
+                        self.bg.fill(transparent)
+                        self.main_loop()
+                
+                
+        
         while True:
             event = pygame.event.wait()
             if event.type == pygame.QUIT:
@@ -195,8 +197,6 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     quit()
-                if event.key == pygame.K_r:
-                    self.main_loop()
         # If we exit the main loop, the only thing left to do is shut down pygame.
         # pygame.quit()
 
